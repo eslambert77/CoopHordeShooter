@@ -28,6 +28,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Damage")
 	TSubclassOf<UDamageType> DamageType;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Damage")
+	float BaseDamage;
+
 	UPROPERTY(VisibleDefaultsOnly, Category = "Weapon")
 	FName MuzzleSocketName;
 

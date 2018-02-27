@@ -24,6 +24,8 @@ ASWeapon::ASWeapon()
 
 	MuzzleSocketName = "MuzzleSocket";
 	TracerTargetName = "Target";
+
+	BaseDamage = 20.0f;
 }
 
 void ASWeapon::Fire()
@@ -52,15 +54,21 @@ void ASWeapon::Fire()
 		FVector TracerEndPoint = TraceEnd;
 
 		FHitResult HitResult;
-		if (GetWorld()->LineTraceSingleByChannel(HitResult, EyeLocation, TraceEnd, ECC_Visibility, QueryParams))
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, EyeLocation, TraceEnd, COLLISION_WEAPON, QueryParams))
 		{
 			//BlockingHit!
 			AActor* DamagedActor = HitResult.GetActor();
-			UGameplayStatics::ApplyPointDamage(DamagedActor, 20.0f, ShotDirection, HitResult, MyOwner->GetInstigatorController(), this, DamageType);
 
 			EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
-			UParticleSystem* SelectedEffect = nullptr;
+			float ActualDamage = BaseDamage;
+			if (SurfaceType == SURFACE_FLESHVUNERABLE)
+			{
+				ActualDamage *= 4.0f;
+			}
 
+			UGameplayStatics::ApplyPointDamage(DamagedActor, ActualDamage, ShotDirection, HitResult, MyOwner->GetInstigatorController(), this, DamageType);
+
+			UParticleSystem* SelectedEffect = nullptr;
 			switch(SurfaceType)
 			{
 			case SURFACE_FLESHDEFAULT:
