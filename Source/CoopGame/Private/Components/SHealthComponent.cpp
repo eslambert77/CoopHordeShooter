@@ -3,7 +3,6 @@
 #include "SHealthComponent.h"
 #include <GameFramework/Actor.h>
 
-
 // Sets default values for this component's properties
 USHealthComponent::USHealthComponent()
 {
@@ -35,6 +34,8 @@ void USHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, 
 	}
 
 	Health = FMath::Clamp(Health - Damage, 0.0f, DefaultHealth);
+
+	OnHealthChanged.Broadcast(this, Health, Damage, DamageType, InstigatedBy, DamageCauser);
 	
 	UE_LOG(LogTemp, Warning, TEXT("Health Remaining: %f"), Health)
 }
