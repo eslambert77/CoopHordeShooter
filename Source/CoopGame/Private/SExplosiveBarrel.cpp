@@ -5,6 +5,7 @@
 #include "SHealthComponent.h"
 #include "PhysicsEngine/RadialForceComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 
 
 
@@ -29,6 +30,9 @@ ASExplosiveBarrel::ASExplosiveBarrel()
 	bExploded = false;
 	ImpulseStrength = 400;
 
+	SetReplicates(true);
+	SetReplicateMovement(true);
+
 }
 
 void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
@@ -36,20 +40,38 @@ void ASExplosiveBarrel::OnHealthChanged(USHealthComponent* HealthComp, float Hea
 	if (Health <= 0.0f && !bExploded)
 	{
 		bExploded = true;
-		
-		if (ExplodedBarrelMat) {
-			MeshComp->SetMaterial(0, ExplodedBarrelMat);
-		}
 
-		if (ExplodeEffect)
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(this, ExplodeEffect, GetActorLocation());
-		}
-		
+		ExplosionEffects();
+
 		FVector ImpulseDirection = GetActorLocation().UpVector;
 		MeshComp->AddImpulse(ImpulseDirection * ImpulseStrength, NAME_None, true);
 		
 		ForceComp->FireImpulse();
 	}
+}
+
+void ASExplosiveBarrel::OnRep_Exploded()
+{
+	ExplosionEffects();
+}
+
+void ASExplosiveBarrel::ExplosionEffects()
+{
+	if (ExplodedBarrelMat) {
+		MeshComp->SetMaterial(0, ExplodedBarrelMat);
+	}
+
+	if (ExplodeEffect)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(this, ExplodeEffect, GetActorLocation());
+	}
+}
+
+void ASExplosiveBarrel::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ASExplosiveBarrel, bExploded);
+
 }
 

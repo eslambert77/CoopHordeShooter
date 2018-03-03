@@ -35,10 +35,16 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "FX")
 	UParticleSystem* ExplodeEffect;
 
+	UPROPERTY(ReplicatedUsing=OnRep_Exploded)
 	bool bExploded;
 
 	UFUNCTION()
 	void OnHealthChanged(USHealthComponent* HealthComp, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
+	UFUNCTION()
+	void OnRep_Exploded();
+
+	void ExplosionEffects();
 
 	UPROPERTY(EditDefaultsOnly, Category = "FX")
 	UMaterialInterface* ExplodedBarrelMat;
