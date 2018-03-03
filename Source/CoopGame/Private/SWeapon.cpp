@@ -9,6 +9,7 @@
 #include "PhysicalMaterials/PhysicalMaterial.h"
 #include "CoopGame.h"
 #include "TimerManager.h"
+#include "Net/UnrealNetwork.h"
 
 static int32 DebugWeaponDrawing = 0;
 FAutoConsoleVariableRef CVARDebugWeapons(
@@ -84,7 +85,7 @@ void ASWeapon::Fire()
 			UGameplayStatics::ApplyPointDamage(DamagedActor, ActualDamage, ShotDirection, HitResult, MyOwner->GetInstigatorController(), this, DamageType);
 
 			UParticleSystem* SelectedEffect = nullptr;
-			switch(SurfaceType)
+			switch (SurfaceType)
 			{
 			case SURFACE_FLESHDEFAULT:
 			case SURFACE_FLESHVUNERABLE:
@@ -101,18 +102,21 @@ void ASWeapon::Fire()
 			}
 
 			TracerEndPoint = HitResult.ImpactPoint;
-			
+
 		}
-		
+
 		if (DebugWeaponDrawing > 0) {
 			DrawDebugLine(GetWorld(), EyeLocation, TraceEnd, FColor::Green, false, 1.0f, 0, 1.0f);
+		}
+
+		if (Role == ROLE_Authority)
+		{
+			HitScanTrace.TraceTo = TracerEndPoint;
 		}
 		
 		PlayFireEffects(TracerEndPoint);
 
-		LastFireTime = GetWorld()->TimeSeconds;
-		
-		
+		LastFireTime = GetWorld()->TimeSeconds;	
 	}
 }
 
@@ -124,6 +128,11 @@ void ASWeapon::ServerFire_Implementation()
 bool ASWeapon::ServerFire_Validate()
 {
 	return true;
+}
+
+void ASWeapon::OnRep_HitScanTrace()
+{
+	PlayFireEffects(HitScanTrace.TraceTo);
 }
 
 void ASWeapon::StartFire()
@@ -163,6 +172,14 @@ void ASWeapon::PlayFireEffects(FVector TracerEndPoint)
 			PC->ClientPlayCameraShake(FireCamShake);
 		}
 	}
+
+}
+
+void ASWeapon::GetLifetimeReplicatedProps(TArray< FLifetimeProperty > & OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(ASWeapon, HitScanTrace, COND_SkipOwner);
 
 }
 
