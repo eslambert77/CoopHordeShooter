@@ -18,7 +18,7 @@ struct FHitScanTrace {
 public:
 
 	UPROPERTY()
-	FVector_NetQuantize TraceFrom;
+	TEnumAsByte<EPhysicalSurface> SurfaceType;
 
 	UPROPERTY()
 	FVector_NetQuantize TraceTo;
@@ -69,6 +69,8 @@ protected:
 	TSubclassOf<UCameraShake> FireCamShake;
 
 	void PlayFireEffects(FVector TracerEndPoint);
+	
+	void PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint);
 
 	virtual void Fire();
 
