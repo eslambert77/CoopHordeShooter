@@ -41,8 +41,12 @@ void ASWeapon::BeginPlay()
 
 void ASWeapon::Fire()
 {
-	//Line Trace from the actors eyes to the location
+	if (Role < ROLE_Authority)
+	{
+		ServerFire();
+	}
 
+	//Line Trace from the actors eyes to the location
 	AActor* MyOwner = GetOwner();
 	if (MyOwner)
 	{
@@ -110,6 +114,16 @@ void ASWeapon::Fire()
 		
 		
 	}
+}
+
+void ASWeapon::ServerFire_Implementation()
+{
+	Fire();
+}
+
+bool ASWeapon::ServerFire_Validate()
+{
+	return true;
 }
 
 void ASWeapon::StartFire()
