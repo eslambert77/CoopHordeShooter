@@ -7,6 +7,8 @@
 #include "STrackerBot.generated.h"
 
 class UStaticMeshComponent;
+class USHealthComponent;
+class UMaterialDynamicInstance;
 
 UCLASS()
 class COOPGAME_API ASTrackerBot : public APawn
@@ -21,8 +23,16 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	UFUNCTION()
+	void HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
+
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	UStaticMeshComponent* MeshComp;
+
+	//Dynamic Material set when damage taken
+	UMaterialInstanceDynamic* MatInst;
+
+	USHealthComponent* HealthComp;
 
 	FVector GetNextPathPoint();
 
