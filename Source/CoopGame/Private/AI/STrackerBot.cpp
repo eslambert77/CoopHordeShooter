@@ -1,3 +1,4 @@
+#include <TimerManager.h>
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "STrackerBot.h"
@@ -9,7 +10,8 @@
 #include "DrawDebugHelpers.h"
 #include "SHealthComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
-
+#include "Components/SphereComponent.h"
+#include "SCharacter.h"
 
 // Sets default values
 ASTrackerBot::ASTrackerBot()
@@ -24,6 +26,13 @@ ASTrackerBot::ASTrackerBot()
 
 	HealthComp = CreateDefaultSubobject<USHealthComponent>(TEXT("HealthComp"));
 	HealthComp->OnHealthChanged.AddDynamic(this, &ASTrackerBot::HandleTakeDamage);
+
+	SphereComp = CreateDefaultSubobject<USphereComponent>(TEXT("SphereComp"));
+	SphereComp->SetSphereRadius(200);
+	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
+	SphereComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	SphereComp->SetupAttachment(RootComponent);
 
 	MovementForce = 1000.0f;
 	bUseVelocityChange = false;
@@ -77,7 +86,7 @@ void ASTrackerBot::SelfDestruct()
 	TArray<AActor*> IgnoredActors;
 	IgnoredActors.Add(this);
 
-	UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController());
+	UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
 
 	DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 0, 1.0f);
 	//Destroy actor since it exploded
@@ -99,6 +108,11 @@ FVector ASTrackerBot::GetNextPathPoint()
 
 	//Failed to find path to goal
 	return GetActorLocation();
+}
+
+void ASTrackerBot::DamageSelf()
+{
+	UGameplayStatics::ApplyDamage(this, 20.0f, GetInstigatorController(), this, nullptr);
 }
 
 // Called every frame
@@ -127,4 +141,20 @@ void ASTrackerBot::Tick(float DeltaTime)
 	DrawDebugSphere(GetWorld(), NextPathPoint, 20.0f, 12, FColor::Yellow, false, 0.0f, 0, 1.0f);
 }
 
+void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+
+	if (!bStartedSelfDestruction)
+	{
+		bStartedSelfDestruction = true;
+
+		ASCharacter* PlayerPawn = Cast<ASCharacter>(OtherActor);
+
+		if (PlayerPawn)
+		{
+			GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, 0.5, true, 0.0f);
+		}
+	}
+	
+}
 
