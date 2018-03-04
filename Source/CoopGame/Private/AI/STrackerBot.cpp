@@ -1,4 +1,4 @@
-#include <TimerManager.h>
+
 // Fill out your copyright notice in the Description page of Project Settings.
 
 #include "STrackerBot.h"
@@ -12,6 +12,8 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Components/SphereComponent.h"
 #include "SCharacter.h"
+#include "Sound/SoundCue.h"
+#include <TimerManager.h>
 
 // Sets default values
 ASTrackerBot::ASTrackerBot()
@@ -31,7 +33,7 @@ ASTrackerBot::ASTrackerBot()
 	SphereComp->SetSphereRadius(200);
 	SphereComp->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	SphereComp->SetCollisionResponseToAllChannels(ECR_Ignore);
-	SphereComp->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+	SphereComp->SetCollisionResponseToChannel(ECC_Pawn , ECR_Overlap);
 	SphereComp->SetupAttachment(RootComponent);
 
 	MovementForce = 1000.0f;
@@ -41,6 +43,8 @@ ASTrackerBot::ASTrackerBot()
 	bExploded = false;
 	ExplosionRadius = 200.0f;
 	ExplosionDamage = 40.0f;
+
+	SelfDestructTimerInterval = 0.25f;
 
 }
 
@@ -89,6 +93,9 @@ void ASTrackerBot::SelfDestruct()
 	UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
 
 	DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 0, 1.0f);
+	
+	UGameplayStatics::SpawnSoundAtLocation(this, ExplosionSound, GetActorLocation());
+	
 	//Destroy actor since it exploded
 	Destroy();
 
@@ -152,8 +159,10 @@ void ASTrackerBot::NotifyActorBeginOverlap(AActor* OtherActor)
 
 		if (PlayerPawn)
 		{
-			GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, 0.5, true, 0.0f);
+			GetWorldTimerManager().SetTimer(TimerHandle_SelfDamage, this, &ASTrackerBot::DamageSelf, SelfDestructTimerInterval, true, 0.0f);
+			UGameplayStatics::SpawnSoundAttached(ExplodeWarning, RootComponent);
 		}
+		
 	}
 	
 }
