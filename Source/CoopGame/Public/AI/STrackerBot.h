@@ -26,6 +26,8 @@ protected:
 	UFUNCTION()
 	void HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser);
 
+	void SelfDestruct();
+
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	UStaticMeshComponent* MeshComp;
 
@@ -33,6 +35,17 @@ protected:
 	UMaterialInstanceDynamic* MatInst;
 
 	USHealthComponent* HealthComp;
+
+	UPROPERTY(EditDefaultsOnly, Category = "FX")
+	UParticleSystem* ExplosionEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "FX")
+	float ExplosionRadius;
+
+	UPROPERTY(EditDefaultsOnly, Category = "FX")
+	float ExplosionDamage;
+
+	bool bExploded;
 
 	FVector GetNextPathPoint();
 
