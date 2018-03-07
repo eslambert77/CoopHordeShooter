@@ -14,6 +14,7 @@
 #include "SCharacter.h"
 #include "Sound/SoundCue.h"
 #include <TimerManager.h>
+#include <Engine/EngineTypes.h>
 
 // Sets default values
 ASTrackerBot::ASTrackerBot()
@@ -57,6 +58,9 @@ void ASTrackerBot::BeginPlay()
 	{
 		NextPathPoint = GetNextPathPoint();
 	}
+
+	FTimerHandle TimerHande_CheckBots;
+	GetWorldTimerManager().SetTimer(TimerHande_CheckBots, this, &ASTrackerBot::CheckNearbyBots, 1.0, true);
 }
 
 void ASTrackerBot::HandleTakeDamage(USHealthComponent* HealthComponent, float Health, float HealthDelta, const class UDamageType* DamageType, class AController* InstigatedBy, AActor* DamageCauser)
@@ -101,7 +105,9 @@ void ASTrackerBot::SelfDestruct()
 		TArray<AActor*> IgnoredActors;
 		IgnoredActors.Add(this);
 
-		UGameplayStatics::ApplyRadialDamage(this, ExplosionDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
+		float ActualDamage = ExplosionDamage + (ExplosionDamage * PowerLevel);
+
+		UGameplayStatics::ApplyRadialDamage(this, ActualDamage, GetActorLocation(), ExplosionRadius, nullptr, IgnoredActors, this, GetInstigatorController(), true);
 
 		DrawDebugSphere(GetWorld(), GetActorLocation(), ExplosionRadius, 12, FColor::Red, false, 2.0f, 0, 1.0f);
 	}
@@ -130,6 +136,50 @@ FVector ASTrackerBot::GetNextPathPoint()
 void ASTrackerBot::DamageSelf()
 {
 	UGameplayStatics::ApplyDamage(this, 20.0f, GetInstigatorController(), this, nullptr);
+}
+
+void ASTrackerBot::CheckNearbyBots()
+{
+	float SphereRadius = 600.0;
+
+	FCollisionShape CollShape;
+	CollShape.SetSphere(SphereRadius);
+
+	FCollisionObjectQueryParams QueryParams;
+	QueryParams.AddObjectTypesToQuery(ECC_PhysicsBody);
+	QueryParams.AddObjectTypesToQuery(ECC_Pawn);
+
+	TArray<FOverlapResult> Overlaps;
+	GetWorld()->OverlapMultiByObjectType(Overlaps, GetActorLocation(), FQuat::Identity, QueryParams, CollShape);
+
+	DrawDebugSphere(GetWorld(), GetActorLocation(), SphereRadius, 12, FColor::White, false, 1.0f, 0, 1.0f);
+
+	int32 NumberOfBots = 0;
+
+	for (const FOverlapResult &OverlapResult : Overlaps)
+	{
+		ASTrackerBot* Bot = Cast<ASTrackerBot>(OverlapResult.GetActor());
+		if (Bot && Bot != this)
+		{
+			NumberOfBots++;
+		}
+	}
+
+	const int32 MaxPowerLevel = 4;
+
+	PowerLevel = FMath::Clamp(NumberOfBots, 0, MaxPowerLevel);
+
+	if (MatInst == nullptr)
+	{
+		MatInst = MeshComp->CreateAndSetMaterialInstanceDynamicFromMaterial(0, MeshComp->GetMaterial(0));
+	}
+
+	if (MatInst)
+	{
+		float Alpha = PowerLevel / (float)MaxPowerLevel;
+
+		MatInst->SetScalarParameterValue("PowerLevelAlpha", Alpha);
+	}
 }
 
 // Called every frame

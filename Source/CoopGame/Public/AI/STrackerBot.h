@@ -34,6 +34,8 @@ protected:
 
 	void DamageSelf();
 
+	void CheckNearbyBots();
+
 	UPROPERTY(VisibleDefaultsOnly, Category = "Components")
 	UStaticMeshComponent* MeshComp;
 
@@ -80,6 +82,8 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "TrackerBot")
 	USoundCue* ExplosionSound;
+
+	int32 PowerLevel;
 	
 
 public:	
