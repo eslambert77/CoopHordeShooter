@@ -39,12 +39,13 @@ void ASPowerup::OnRep_PowerupActive()
 	OnPowerupStateChanged(bIsPowerupActive);
 }
 
-void ASPowerup::ActivatePowerup()
+void ASPowerup::ActivatePowerup(AActor* ActiveFor)
 {
-	OnActivated();
+	OnActivated(ActiveFor);
 
 	bIsPowerupActive = true;
 	OnRep_PowerupActive();
+	
 
 	if (PowerupInterval >= 0.0f)
 	{
