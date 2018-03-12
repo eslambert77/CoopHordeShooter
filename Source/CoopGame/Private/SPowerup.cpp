@@ -14,10 +14,7 @@ ASPowerup::ASPowerup()
 // Called when the game starts or when spawned
 void ASPowerup::BeginPlay()
 {
-	Super::BeginPlay();
-	
-	
-	
+	Super::BeginPlay();	
 }
 
 void ASPowerup::OnTickPowerup()
